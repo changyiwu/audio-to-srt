@@ -12,8 +12,8 @@
 - Anthropic
 - ChatGPT
 - OpenAI
-- GPT Codex / GPT-Codex（OpenAI 的 agent 產品）
 - Gemini
+- Gemini Notebook
 - Groq
 - Whisper
 - Typeless
