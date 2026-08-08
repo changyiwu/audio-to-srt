@@ -13,9 +13,10 @@
 
 ## 目標與路線圖
 
-- [ ] 階段一：推上 GitHub 公開 repo，讓其他老師可 clone／下載 ZIP 安裝
+- [x] 階段一：推上 GitHub 公開 repo，讓其他老師可 clone／下載 ZIP 安裝
 - [ ] 階段二：安裝到本機技能目錄（`~/.claude/skills/audio-to-srt`）實測整條流水線
-- [ ] 階段三：補使用範例（實際音檔 → SRT 的前後對照）與疑難排解章節
+- [ ] 階段三：精簡 `vocabulary.md` 至 prompt 上限內（現 34 詞只有前 20 個生效）
+- [ ] 階段四：補使用範例（實際音檔 → SRT 的前後對照）與疑難排解章節
 
 ## 資料夾結構
 
@@ -66,6 +67,14 @@ audio-to-srt/
 - **機械替換只處理確定性的一對一映射**。需要語境判斷的（中文同音字、可能是正常語句的字串）一律留給清字階段——寫進 `replacements.json` 就會誤傷
 - 新增英文規則靠**詞邊界**自動防護；多字詞（`Google Cloud`）擋不住的，加進 `protect` 陣列
 - 靜音修正只認**跨越段落邊界**的靜音，段內換氣必須忽略，且 end 只能縮短不能延長
+- `vocabulary.md` 有 prompt 長度上限（約 224 token，腳本抓 200 字），**重要的詞放前面**——超出的會從尾端截掉，只印警告不報錯
+
+### 安裝與同步
+
+- 安裝副本在 `~/.claude/skills/audio-to-srt`。複製的是 `skill/` 的**內容**：
+  `Copy-Item -Recurse -Force skill\* "$env:USERPROFILE\.claude\skills\audio-to-srt\"`
+  寫成 `Copy-Item -Recurse skill "...\audio-to-srt"` 在目標已存在時會變成巢狀的 `audio-to-srt\skill\`，技能就讀不到
+- 一律改本專案的原始檔，不要直接編輯安裝副本
 
 ## 同步層級（本專案初始化至第 3 層級）
 
