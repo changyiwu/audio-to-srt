@@ -6,32 +6,23 @@
 **加自己的詞彙就直接改這裡。** Whisper 的 prompt 上限約 224 token，
 腳本抓 200 字為保守值，超過會從清單尾端截掉並印出警告——把最重要的詞放前面。
 
-## 頻道/人物
-- Sense Bar
-
 ## AI 工具
 - Claude
 - Claude Code
-- Claude Code Desktop
-- Claude.ai
 - Anthropic
 - ChatGPT
 - OpenAI
 - GPT Codex / GPT-Codex（OpenAI 的 agent 產品）
 - Gemini
-- Gemini Notebook
 - Groq
 - Whisper
 - Typeless
-- VoiceType
-- NoType
 
 ## 開發工具
 - GitHub
 - Git
 - Obsidian
 - Firebase
-- Supabase
 - Python
 - JavaScript
 - HTML
@@ -57,8 +48,6 @@
 | 威士帕 / whisper | Whisper |
 | 傑米奈 / Gemini | Gemini |
 | 泰普勒斯 | Typeless |
-| 沃伊斯泰普 | VoiceType |
-| 諾泰普 | NoType |
 | 歐布西迪安 | Obsidian |
 | 法亞貝斯 | Firebase |
 
