@@ -11,12 +11,14 @@
 import argparse
 import json
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 MAX_DUR = 3.0
 MIN_DUR = 0.6
+MIN_VISIBLE = 0.3   # 一段字幕至少停留這麼久（與 write_srt 的下限一致）
 MAX_CHARS = 15
 SOFT_CHARS = 10
 STRONG_PUNCT = set("。！？!?…")
@@ -152,6 +154,9 @@ def chunk_to_entry(buf):
 
 def detect_silence(audio_path: Path, noise_db: int = -35, min_dur: float = 0.25):
     """用 ffmpeg silencedetect 回傳 [(silence_start, silence_end), ...] 清單。"""
+    if not shutil.which("ffmpeg"):
+        print("[WARN] 找不到 ffmpeg，跳過靜音修正")
+        return []
     cmd = [
         "ffmpeg", "-i", str(audio_path),
         "-af", f"silencedetect=noise={noise_db}dB:d={min_dur}",
@@ -167,12 +172,18 @@ def detect_silence(audio_path: Path, noise_db: int = -35, min_dur: float = 0.25)
     return pairs
 
 
-def apply_silence_gaps(entries, silence_periods):
-    """根據 ffmpeg 靜音區段，修正每筆 entry 的 end/start。
+def apply_silence_gaps(entries, silence_periods, tol: float = 0.15):
+    """根據 ffmpeg 靜音區段，讓相鄰字幕之間在真正的靜音處留白。
 
-    - 若 entry[i].end 與 entry[i+1].start 之間存在靜音，
-      把 entry[i].end 縮到 silence_start，entry[i+1].start 延到 silence_end。
-    - 若靜音在 entry 內部（說話說到一半有停頓），也把 end 截到靜音 start。
+    只處理**跨越段落邊界**的靜音：把 entry[i].end 縮到 silence_start、
+    把 entry[i+1].start 延到 silence_end。
+
+    段落**內部**的靜音一律忽略——講者說到一半換氣是常態，
+    若照著截掉 end，字幕會在人還在講的時候就消失（MAX_DUR=3s 下幾乎段段都中）。
+    判準是靜音必須延續到本段結尾附近（`sil_e >= end - tol`）才算邊界靜音。
+
+    end 只會被**縮短**，不會延長：word-level 時間碼才是文字何時被說出的依據，
+    靜音偵測只用來製造留白。
     """
     if not silence_periods or not entries:
         return entries
@@ -182,15 +193,22 @@ def apply_silence_gaps(entries, silence_periods):
         next_start = adj[i + 1][0] if i + 1 < len(adj) else float("inf")
 
         for sil_s, sil_e in silence_periods:
-            # 靜音在本段結尾附近（可能稍早一點開始）
-            if start < sil_s <= next_start + 0.05:
-                new_end = max(sil_s, start + 0.2)   # 至少保留 0.2 s
-                adj[i] = (start, new_end, text)
-                # 同步把下一段 start 推到靜音結束後
-                if i + 1 < len(adj) and sil_e < float("inf"):
-                    ns, ne, nt = adj[i + 1]
-                    adj[i + 1] = (max(ns, sil_e), ne, nt)
-                break
+            if sil_s > next_start + tol:
+                break                       # 靜音已排到下一段之後，不必再找
+            if sil_e < end - tol:
+                continue                    # 段內換氣，跳過
+            if sil_s >= end:
+                break                       # 本來就有留白，不用動
+
+            # 邊界靜音：縮 end，但至少保留 MIN_VISIBLE 秒可讀時間
+            new_end = min(end, max(sil_s, start + MIN_VISIBLE))
+            adj[i] = (start, new_end, text)
+
+            # 同步把下一段 start 推到靜音結束後（不得越過它自己的 end）
+            if i + 1 < len(adj) and sil_e < float("inf"):
+                ns, ne, nt = adj[i + 1]
+                adj[i + 1] = (max(ns, min(sil_e, ne - MIN_VISIBLE)), ne, nt)
+            break
 
     return adj
 
@@ -202,16 +220,15 @@ def write_srt(entries, out: Path) -> None:
     for i, (start, end, text) in enumerate(entries, start=1):
         if start < prev_end:
             start = prev_end
-        if end <= start:
-            end = start + 0.3
-        if end - start < 0.3:
-            end = start + 0.3
+        if end - start < MIN_VISIBLE:
+            end = start + MIN_VISIBLE
         lines.append(str(i))
         lines.append(f"{ms_tc(start)} --> {ms_tc(end)}")
         lines.append(text)
         lines.append("")
         prev_end = end
-    out.write_text("\n".join(lines), encoding="utf-8")
+    # 末尾補一行空白，讓最後一塊也有結尾空行（部分播放器要求）
+    out.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def main() -> int:
