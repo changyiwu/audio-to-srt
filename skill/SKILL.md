@@ -98,7 +98,7 @@ python ".../scripts/apply_vocab.py" \
 - **Antigravity、Netlify、clasp、Apps Script** 等工具名
 - **Claude 生態**：ClockCode/CloudCode/ClawCode → Claude Code、克勞德 → Claude
 - **Cloud → Claude**（放最後，避免先動到 Cloud Code）
-- **NotebookLM、GPT-Image 2** 等其他 AI 工具
+- **GPT-Image 2** 等其他 AI 工具
 - **常見錯字**：斷考→段考、翻例→範例 等
 
 **只動文字行，時間碼絕不動。**
@@ -161,7 +161,7 @@ PYTHONIOENCODING=utf-8 PYTHONUTF8=1 python -X utf8 -m whisper "輸入檔.mp3" \
   --language zh \
   --output_format srt \
   --output_dir ./_subtitles \
-  --initial_prompt "以下為繁體中文。專有名詞：Claude、Claude Code、NotebookLM、Gemini、Groq、Whisper、Obsidian。"
+  --initial_prompt "以下為繁體中文。專有名詞：Claude、Claude Code、Gemini、Gemini Notebook、Groq、Whisper、Obsidian。"
 ```
 
 `--initial_prompt` 的詞彙比照 `references/vocabulary.md`（本地路線沒有自動組裝，需自行貼上）。

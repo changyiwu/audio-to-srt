@@ -120,10 +120,6 @@
 | `Aging Settings` | `Agent Settings` | |
 | `Agin Setting` | `Agent Settings` | |
 | `Agen setting` | `Agent Settings` | |
-| `bookLM的MCP` | `bookLM 的 MCP` | 否 |
-
-最後一條關掉邊界，是為了匹配 `notebookLM的MCP` 這種詞中片段；
-補完空格後由下面的 `notebookLM` → `NotebookLM` 接手。
 
 ### OpenCode
 
@@ -158,14 +154,12 @@
 
 ### 其他 AI 工具
 
+NotebookLM 已於 2026 年改名 **Gemini Notebook**，原本那六條「聽成 notebook LM → 改成
+NotebookLM」的規則因此移除——把講者說的話改寫成一個已經停用的舊名沒有意義。
+若之後發現 Whisper 會把新名字聽錯，再依實際聽錯的樣子加規則，不要憑空猜。
+
 | 聽成 | 正確 | 邊界 |
 |------|------|------|
-| `Notebook AM` | `NotebookLM` | |
-| `notebook AM` | `NotebookLM` | |
-| `Notebook LM` | `NotebookLM` | |
-| `notebook LM` | `NotebookLM` | |
-| `NotebookAM` | `NotebookLM` | |
-| `notebookLM` | `NotebookLM` | |
 | `ImageR` | `Image 2` | |
 | `Image R` | `Image 2` | |
 | `GPT Image 2` | `GPT-Image 2` | |

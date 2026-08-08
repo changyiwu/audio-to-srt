@@ -19,7 +19,7 @@
 - OpenAI
 - GPT Codex / GPT-Codex（OpenAI 的 agent 產品）
 - Gemini
-- NotebookLM
+- Gemini Notebook
 - Groq
 - Whisper
 - Typeless
@@ -56,7 +56,6 @@
 | block / 巴洛克 | Groq |
 | 威士帕 / whisper | Whisper |
 | 傑米奈 / Gemini | Gemini |
-| notebook LM | NotebookLM |
 | 泰普勒斯 | Typeless |
 | 沃伊斯泰普 | VoiceType |
 | 諾泰普 | NoType |
