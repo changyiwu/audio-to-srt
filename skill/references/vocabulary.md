@@ -69,4 +69,4 @@
 2. **清字階段**：Claude 讀本檔，遇到相近音的詞自動替換為正確名稱
 
 > 上面「Whisper 常見誤判對照」是給清字階段看的**參考**，不會自動生效。
-> 要讓它變成自動替換，得寫進 `replacements.json`（或你自己的 `~/.audio-to-srt/replacements.json`）。
+> 要讓它變成自動替換，得寫進 `replacements.md`（或你自己的 `~/.audio-to-srt/replacements.md`）。

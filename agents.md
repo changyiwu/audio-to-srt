@@ -40,7 +40,7 @@ audio-to-srt/
     └── references/
         ├── cleanup_rules.md      # 清字規則（逐段不跨段）
         ├── vocabulary.md         # 詞彙表 → 自動組成 Whisper initial prompt
-        └── replacements.json     # 機械替換規則＋保護詞（使用者可覆寫）
+        └── replacements.md       # 機械替換規則＋保護詞（使用者可覆寫）
 ```
 
 ## 專案專屬規則
@@ -63,9 +63,9 @@ audio-to-srt/
 - **Python 3.9+**，且**不得引入第三方套件**——老師的電腦不一定裝得起來，標準庫寫得出來就用標準庫
 - 目標平台以 **Windows** 為主：本地 Whisper 路線一律加 `PYTHONUTF8=1` 與 `-X utf8`，否則 cp950 寫不了繁中
 - 中文檔名上傳 Groq 會壞編碼，`transcribe_groq.py` 內部一律改用 `audio.<ext>` 上傳
-- `replacements.json` 的規則**順序有意義**：先 GPT-Codex 變體 → 再 Claude 生態 → 最後 Cloud→Claude。新增規則時務必確認插入位置
-- **機械替換只處理確定性的一對一映射**。需要語境判斷的（中文同音字、可能是正常語句的字串）一律留給清字階段——寫進 `replacements.json` 就會誤傷
-- 新增英文規則靠**詞邊界**自動防護；多字詞（`Google Cloud`）擋不住的，加進 `protect` 陣列
+- `replacements.md` 的規則**順序有意義**：先 GPT-Codex 變體 → 再 Claude 生態 → 最後 Cloud→Claude。新增規則時務必確認插入位置
+- **機械替換只處理確定性的一對一映射**。需要語境判斷的（中文同音字、可能是正常語句的字串）一律留給清字階段——寫進 `replacements.md` 就會誤傷
+- 新增英文規則靠**詞邊界**自動防護；多字詞（`Google Cloud`）擋不住的，加進〈保護詞〉那節
 - 靜音修正只認**跨越段落邊界**的靜音，段內換氣必須忽略，且 end 只能縮短不能延長
 - `vocabulary.md` 有 prompt 長度上限（約 224 token，腳本抓 200 字），**重要的詞放前面**——超出的會從尾端截掉，只印警告不報錯
 

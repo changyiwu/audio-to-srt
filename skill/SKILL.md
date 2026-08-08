@@ -93,7 +93,7 @@ python ".../scripts/apply_vocab.py" \
   _subtitles/輸入檔.raw.srt \
   --out _subtitles/輸入檔.vocab.srt
 ```
-規則放在 `references/replacements.json`（**不寫死在程式裡**），依序執行：
+規則放在 `references/replacements.md`（**不寫死在程式裡**，Markdown 表格，直接編輯即可），依序執行：
 - **GPT-Codex 變體**（含 DexDex/Dex Dex → Codex）：必須最先處理，避免 Cloud→Claude 後誤判
 - **Antigravity、Netlify、clasp、Apps Script** 等工具名
 - **Claude 生態**：ClockCode/CloudCode/ClawCode → Claude Code、克勞德 → Claude
@@ -106,12 +106,12 @@ python ".../scripts/apply_vocab.py" \
 **兩道防誤傷機制**（沒有這兩層，`Cloud→Claude` 會把 iCloud 改成 iClaude）：
 
 1. **詞邊界**：規則頭尾若是英數字，會要求前後不是英數字 → `iCloud`、`Cloudflare`、`SoundCloud` 都不會被動到
-2. **保護詞**（`protect` 陣列）：詞邊界救不了的多字詞先遮蔽、跑完再還原 → `Google Cloud`、`cloud storage`、`Netflix` 保持原樣
+2. **保護詞**（規則檔的〈保護詞〉那節）：詞邊界救不了的多字詞先遮蔽、跑完再還原 → `Google Cloud`、`cloud storage`、`Netflix` 保持原樣
 
 中文規則沒有詞邊界可言，所以**凡是可能出現在正常語句裡的中文字串一律不要寫進規則**
 （例如「三十八」是數字、「在」／「再」要看句子才知道哪個對），那類修正交給 Step 7 由 Claude 依語境判斷。
 
-使用者自訂規則放 `~/.audio-to-srt/replacements.json`（同格式），會**先於**內建規則執行，
+使用者自訂規則放 `~/.audio-to-srt/replacements.md`（同格式），會**先於**內建規則執行，
 可覆蓋內建行為；升級技能不會蓋掉它。要暫時停用加 `--no-user-rules`。
 
 ### Step 7：Claude 逐段精修
@@ -188,9 +188,9 @@ skills/audio-to-srt/
 └── references/
     ├── cleanup_rules.md          # 清字規則（逐段不跨段）
     ├── vocabulary.md             # 詞彙表 → 組成 Whisper initial prompt
-    └── replacements.json         # 機械替換規則＋保護詞
+    └── replacements.md           # 機械替換規則＋保護詞（Markdown 表格）
 
-~/.audio-to-srt/replacements.json # （選用）使用者自訂規則，先於內建規則執行
+~/.audio-to-srt/replacements.md   # （選用）使用者自訂規則，先於內建規則執行
 ```
 
 ## 路線選擇決策樹
@@ -206,7 +206,7 @@ skills/audio-to-srt/
 
 - Whisper 辨識準但斷句差 → Groq word-level + resegment 解決
 - 長音訊爆記憶體（本地）→ 改走 Groq；Groq 25 MB 上限 → ffmpeg 降取樣
-- Cloud / Claude / Codex 互相誤判 → replacements.json 順序講究：先處理 GPT-Codex 變體（含 DexDex），再 Claude，最後 Cloud→Claude
+- Cloud / Claude / Codex 互相誤判 → replacements.md 順序講究：先處理 GPT-Codex 變體（含 DexDex），再 Claude，最後 Cloud→Claude
 - 純字串替換會誤傷（iCloud→iClaude、Google Cloud→Google Claude）→ 加詞邊界＋保護詞兩層
 - 中文詞規則誤傷正常語句（「三十八」是數字）→ 中文的語境判斷不要交給機械替換，留給 Step 7
 - 靜音修正把字幕砍掉（段內換氣被當成句末）→ 只認跨越段落邊界的靜音

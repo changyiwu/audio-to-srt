@@ -48,9 +48,9 @@ Copy-Item -Recurse -Force skill\* "$env:USERPROFILE\.claude\skills\audio-to-srt\
 | 想做的事 | 改哪裡 |
 |---------|--------|
 | 讓 Whisper 認得你的專有名詞 | `skill/references/vocabulary.md`（會自動組成 initial prompt） |
-| 固定把某個錯字換成正確寫法 | `skill/references/replacements.json` |
+| 固定把某個錯字換成正確寫法 | `skill/references/replacements.md` |
 
-不想動到技能本體（升級會被覆蓋）的話，把自己的替換規則放 `~/.audio-to-srt/replacements.json`，
+不想動到技能本體（升級會被覆蓋）的話，把自己的替換規則放 `~/.audio-to-srt/replacements.md`，
 格式相同，會**先於**內建規則執行。
 
 ⚠️ 中文規則要小心：機械替換沒有詞邊界可言，寫「三十八 → 某某」會把「第三十八頁」也改掉。
