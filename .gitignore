@@ -1,0 +1,14 @@
+.claude/
+__pycache__/
+*.pyc
+.env
+*.key
+credentials.*
+
+# Google 雲端硬碟 / Windows 產生的雜檔
+desktop.ini
+*.tmp
+~$*
+
+# 交接檔含真實電腦名與本機路徑，只走雲端硬碟同步，不進公開 repo
+handoff.md
