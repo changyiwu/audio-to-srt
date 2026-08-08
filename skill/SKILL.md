@@ -38,9 +38,14 @@ ls ~/.groq_api_key                # 或本地 key 檔
 ```
 若兩者皆無 → 提示使用者設定，並中止。
 
-ffmpeg 確認（大檔降取樣會用到）：
+ffmpeg 確認（大檔降取樣、靜音偵測會用到）：
 ```bash
 ffmpeg -version 2>&1 | head -1
+```
+
+Python 需 **3.9 以上**（腳本用到 `tuple[...]` 型別註記）：
+```bash
+python --version
 ```
 
 ### Step 2：準備工作目錄
@@ -60,6 +65,10 @@ python "%USERPROFILE%/.claude/skills/audio-to-srt/scripts/transcribe_groq.py" \
 ```
 產出 verbose_json，含 `segments` 與 `words`（每個字都有 start/end）。
 
+`--initial_prompt` 由 `references/vocabulary.md` 的條列詞彙自動組成（略過「誤判對照」「使用方式」兩節）。
+要讓 Whisper 認得新的專有名詞，改那份檔案即可；prompt 上限約 224 token，腳本抓 200 字，
+超過會從清單尾端截掉並印警告——重要的詞放前面。也可用 `--prompt` 直接覆寫。
+
 ### Step 5：依 word-level 時間碼重新斷句 → raw SRT
 ```bash
 python ".../scripts/resegment.py" \
@@ -71,8 +80,12 @@ python ".../scripts/resegment.py" \
 參數：`MAX_DUR=3.0s`、`MAX_CHARS=15`、`MIN_DUR=0.6s`。
 
 `--audio` 會在斷句後呼叫 `ffmpeg silencedetect` 偵測真實靜音（預設 -35 dB、0.25 s），
-將每段的 end 縮到靜音起點、下一段的 start 延到靜音終點，讓字幕在靜音處自動留白。
-不傳 `--audio` 時維持舊行為（Groq word timestamps 本身無靜音間隔）。
+把**跨越段落邊界**的靜音拿來留白：該段 end 縮到靜音起點、下一段 start 延到靜音終點。
+不傳 `--audio` 時不做這步（Groq word timestamps 本身無靜音間隔）。
+
+**只認邊界靜音，段落內部的停頓一律忽略**——講者說到一半換氣是常態，
+若照著截 end，字幕會在人還在講的時候就消失。判準是靜音要延續到本段結尾附近。
+end 只會被縮短不會延長：文字何時被說出以 word-level 時間碼為準，靜音偵測只用來製造留白。
 
 ### Step 6：套用詞彙修正（機械式替換）
 ```bash
@@ -80,14 +93,26 @@ python ".../scripts/apply_vocab.py" \
   _subtitles/輸入檔.raw.srt \
   --out _subtitles/輸入檔.vocab.srt
 ```
-腳本內含 REPLACEMENTS 清單：
-- **GPT-Codex 變體**（含 DexDex/Dex Dex/dex dex → Codex）：必須最先處理，避免 Cloud→Claude 後誤判
+規則放在 `references/replacements.json`（**不寫死在程式裡**），依序執行：
+- **GPT-Codex 變體**（含 DexDex/Dex Dex → Codex）：必須最先處理，避免 Cloud→Claude 後誤判
+- **Antigravity、Netlify、clasp、Apps Script** 等工具名
 - **Claude 生態**：ClockCode/CloudCode/ClawCode → Claude Code、克勞德 → Claude
 - **Cloud → Claude**（放最後，避免先動到 Cloud Code）
 - **NotebookLM、GPT-Image 2** 等其他 AI 工具
-- **常見錯字**：斷考→段考、三十八→三師爸、小課→小克 等
+- **常見錯字**：斷考→段考、翻例→範例 等
 
 **只動文字行，時間碼絕不動。**
+
+**兩道防誤傷機制**（沒有這兩層，`Cloud→Claude` 會把 iCloud 改成 iClaude）：
+
+1. **詞邊界**：規則頭尾若是英數字，會要求前後不是英數字 → `iCloud`、`Cloudflare`、`SoundCloud` 都不會被動到
+2. **保護詞**（`protect` 陣列）：詞邊界救不了的多字詞先遮蔽、跑完再還原 → `Google Cloud`、`cloud storage`、`Netflix` 保持原樣
+
+中文規則沒有詞邊界可言，所以**凡是可能出現在正常語句裡的中文字串一律不要寫進規則**
+（例如「三十八」是數字、「在」／「再」要看句子才知道哪個對），那類修正交給 Step 7 由 Claude 依語境判斷。
+
+使用者自訂規則放 `~/.audio-to-srt/replacements.json`（同格式），會**先於**內建規則執行，
+可覆蓋內建行為；升級技能不會蓋掉它。要暫時停用加 `--no-user-rules`。
 
 ### Step 7：Claude 逐段精修
 - 用 Read 讀 `輸入檔.vocab.srt`
@@ -136,8 +161,10 @@ PYTHONIOENCODING=utf-8 PYTHONUTF8=1 python -X utf8 -m whisper "輸入檔.mp3" \
   --language zh \
   --output_format srt \
   --output_dir ./_subtitles \
-  --initial_prompt "以下為繁體中文。專有名詞：Claude、Claude Code、NotebookLM、Gemini、Groq、Whisper、Obsidian、三師爸、小克。"
+  --initial_prompt "以下為繁體中文。專有名詞：Claude、Claude Code、NotebookLM、Gemini、Groq、Whisper、Obsidian。"
 ```
+
+`--initial_prompt` 的詞彙比照 `references/vocabulary.md`（本地路線沒有自動組裝，需自行貼上）。
 
 **Windows 踩坑**：
 1. `whisper` CLI 不在 PATH → 用 `python -m whisper`
@@ -160,7 +187,10 @@ skills/audio-to-srt/
 │   └── validate_srt.py           # 時間碼驗證
 └── references/
     ├── cleanup_rules.md          # 清字規則（逐段不跨段）
-    └── vocabulary.md             # 自訂詞彙表
+    ├── vocabulary.md             # 詞彙表 → 組成 Whisper initial prompt
+    └── replacements.json         # 機械替換規則＋保護詞
+
+~/.audio-to-srt/replacements.json # （選用）使用者自訂規則，先於內建規則執行
 ```
 
 ## 路線選擇決策樹
@@ -176,6 +206,9 @@ skills/audio-to-srt/
 
 - Whisper 辨識準但斷句差 → Groq word-level + resegment 解決
 - 長音訊爆記憶體（本地）→ 改走 Groq；Groq 25 MB 上限 → ffmpeg 降取樣
-- Cloud / Claude / Codex 互相誤判 → apply_vocab 順序講究：先處理 GPT-Codex 變體（含 DexDex），再 Claude，最後 Cloud→Claude
+- Cloud / Claude / Codex 互相誤判 → replacements.json 順序講究：先處理 GPT-Codex 變體（含 DexDex），再 Claude，最後 Cloud→Claude
+- 純字串替換會誤傷（iCloud→iClaude、Google Cloud→Google Claude）→ 加詞邊界＋保護詞兩層
+- 中文詞規則誤傷正常語句（「三十八」是數字）→ 中文的語境判斷不要交給機械替換，留給 Step 7
+- 靜音修正把字幕砍掉（段內換氣被當成句末）→ 只認跨越段落邊界的靜音
 - Windows cp950 編碼 → 本地路線一律加 `PYTHONUTF8=1`
 - 中文檔名上傳 Groq 編碼壞掉 → transcribe_groq.py 內部改用 `audio.<ext>` 上傳
