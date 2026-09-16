@@ -23,8 +23,15 @@
 ## 安裝方式
 
 **Claude Code**（下載 ZIP 或 clone 後，在專案根目錄執行）：
+
+**Windows（PowerShell）**
 ```powershell
 Copy-Item -Recurse -Force skill\* "$env:USERPROFILE\.claude\skills\audio-to-srt\"
+```
+
+**macOS / Linux**
+```bash
+mkdir -p ~/.claude/skills/audio-to-srt && cp -R skill/. ~/.claude/skills/audio-to-srt/
 ```
 
 > 注意結尾的 `skill\*` 與 `\`：要複製的是 `skill/` 的**內容**。
@@ -36,7 +43,7 @@ Copy-Item -Recurse -Force skill\* "$env:USERPROFILE\.claude\skills\audio-to-srt\
 ## 需求
 
 - **Python 3.9 以上**（腳本用到 `tuple[...]` 型別註記；不需要任何第三方套件）
-- **ffmpeg**：`winget install Gyan.FFmpeg`
+- **ffmpeg**：Windows `winget install Gyan.FFmpeg`，macOS `brew install ffmpeg`
 - **Groq API Key（建議，免費）**：到 [console.groq.com](https://console.groq.com) 註冊取得，
   存成環境變數 `GROQ_API_KEY` 或寫入 `~/.groq_api_key` 檔
 - 沒有 key 也能用：會改走本地 Whisper（較慢，需要 `pip install openai-whisper`）
